@@ -38,7 +38,7 @@ class FileFinder
 				$finder = new Finder();
 				$finder->followLinks();
 				$finder->files()->name('*.{' . implode(',', $this->fileExtensions) . '}');
-				$finder->filter(fn (SplFileInfo $file) => $this->fileExcluder->isExcludedFromAnalysing($file->getPath()));
+				$finder->filter(fn (SplFileInfo $file) => !$this->fileExcluder->isExcludedFromAnalysing($file->getPath()));
 				// phpcs:disable Squiz.PHP.NonExecutableCode
 				foreach ($finder->in($path) as $fileInfo) {
 					$files[] = $this->fileHelper->normalizePath($fileInfo->getPathname());
