@@ -2,10 +2,8 @@
 
 namespace PHPStan\File;
 
+use SplFileInfo;
 use Symfony\Component\Finder\Finder;
-use function array_filter;
-use function array_unique;
-use function array_values;
 use function file_exists;
 use function implode;
 use function is_file;
@@ -39,14 +37,15 @@ class FileFinder
 			} else {
 				$finder = new Finder();
 				$finder->followLinks();
-				foreach ($finder->files()->name('*.{' . implode(',', $this->fileExtensions) . '}')->in($path) as $fileInfo) {
+				$finder->files()->name('*.{' . implode(',', $this->fileExtensions) . '}');
+				$finder->filter(fn (SplFileInfo $file) => $this->fileExcluder->isExcludedFromAnalysing($file->getPath()));
+				// phpcs:disable Squiz.PHP.NonExecutableCode
+				foreach ($finder->in($path) as $fileInfo) {
 					$files[] = $this->fileHelper->normalizePath($fileInfo->getPathname());
 					$onlyFiles = false;
 				}
 			}
 		}
-
-		$files = array_values(array_unique(array_filter($files, fn (string $file): bool => !$this->fileExcluder->isExcludedFromAnalysing($file))));
 
 		return new FileFinderResult($files, $onlyFiles);
 	}
