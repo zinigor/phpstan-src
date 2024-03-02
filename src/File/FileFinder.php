@@ -36,9 +36,23 @@ class FileFinder
 				throw new PathNotFoundException($path);
 			} else {
 				$finder = new Finder();
-				$finder->followLinks();
+				//$finder->followLinks();
 				$finder->files()->name('*.{' . implode(',', $this->fileExtensions) . '}');
-				$finder->filter(fn (SplFileInfo $file) => !$this->fileExcluder->isExcludedFromAnalysing($file->getPath()));
+				$finder->filter(function (SplFileInfo $file) {
+					$path = $file->getPath();
+					$is_it = true;
+					if ( $this->fileExcluder->isExcludedFromAnalysing($path) ) {
+						if(!is_file($path)) {
+							echo 'Skipping ' . $path . PHP_EOL;
+							if ( false !== strpos( $path, 'node_modules' ) ) {
+								//die();
+							} 
+						}
+						$is_it = false;
+					}
+					return $is_it;
+				},
+					true);
 				// phpcs:disable Squiz.PHP.NonExecutableCode
 				foreach ($finder->in($path) as $fileInfo) {
 					$files[] = $this->fileHelper->normalizePath($fileInfo->getPathname());
